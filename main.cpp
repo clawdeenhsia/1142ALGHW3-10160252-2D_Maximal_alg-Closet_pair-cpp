@@ -47,15 +47,74 @@ bool cmpY(const Point& a, const Point& b) {
 
 // 判斷 p1 是否被 p2 凌駕
 // 若 p2.x >= p1.x 且 p2.y >= p1.y，並且至少一項嚴格大於，則 p1 被 p2 凌駕
+
 bool isDominated(const Point& p1, const Point& p2) {
+    return (p2.x >= p1.x && p2.y >= p1.y) &&
+           (p2.x > p1.x || p2.y > p1.y);
+}    
     // TODO:
     // 依照題目中的凌駕定義完成判斷
     return false; // 請修改
 }
 
 // n <= 3 時直接暴力求極點
+
 vector<Point> bruteForceMaximal(const vector<Point>& S) {
     vector<Point> result;
+
+
+    vector<Point> leftMaximal = maximalPoints(SL);
+    vector<Point> rightMaximal = maximalPoints(SR);
+
+    int ymax = -1;
+
+    for (const auto& p : rightMaximal) {
+        if (p.y > ymax) {
+            ymax = p.y;
+        }
+    }
+
+    vector<Point> filteredLeft;
+
+    if (rightMaximal.empty()) {
+        filteredLeft = leftMaximal;
+    } else {
+        for (const auto& p : leftMaximal) {
+            if (p.y > ymax) {
+                filteredLeft.push_back(p);
+            }
+        }
+    }
+
+    vector<Point> result;
+
+    for (const auto& p : filteredLeft) {
+        result.push_back(p);
+    }
+
+    for (const auto& p : rightMaximal) {
+        result.push_back(p);
+    }
+
+    return result;
+}
+    for (int i = 0; i < S.size(); i++) {
+        bool dominated = false;
+
+        for (int j = 0; j < S.size(); j++) {
+            if (i != j && isDominated(S[i], S[j])) {
+                dominated = true;
+                break;
+            }
+        }
+
+        if (!dominated) {
+            result.push_back(S[i]);
+        }
+    }
+
+    return result;
+}
 
     // TODO:
     // 1. 對每個點檢查是否被其他點凌駕
@@ -68,10 +127,15 @@ vector<Point> bruteForceMaximal(const vector<Point>& S) {
 // 取得 x 座標中位數
 int getMedianX(const vector<Point>& S) {
     vector<int> xs;
+
     for (const auto& p : S) {
         xs.push_back(p.x);
     }
 
+    sort(xs.begin(), xs.end());
+
+    return xs[xs.size() / 2];
+}
     // TODO:
     // 1. 將 xs 排序
     // 2. 取中位數並回傳
@@ -79,7 +143,65 @@ int getMedianX(const vector<Point>& S) {
 }
 
 // 2D_Maximal 主遞迴
+
 vector<Point> maximalPoints(const vector<Point>& S) {
+    int n = S.size();
+
+    if (n <= 3) {
+        return bruteForceMaximal(S);
+    }
+
+    int medianX = getMedianX(S);
+
+    vector<Point> SL, SR;
+
+    for (const auto& p : S) {
+        if (p.x <= medianX) {
+            SL.push_back(p);
+        } else {
+            SR.push_back(p);
+        }
+    }
+
+    if (SL.size() == S.size() || SR.size() == S.size()) {
+        return bruteForceMaximal(S);
+    }
+
+    vector<Point> leftMaximal = maximalPoints(SL);
+    vector<Point> rightMaximal = maximalPoints(SR);
+
+    int ymax = -1;
+
+    for (const auto& p : rightMaximal) {
+        if (p.y > ymax) {
+            ymax = p.y;
+        }
+    }
+
+    vector<Point> filteredLeft;
+
+    if (rightMaximal.empty()) {
+        filteredLeft = leftMaximal;
+    } else {
+        for (const auto& p : leftMaximal) {
+            if (p.y > ymax) {
+                filteredLeft.push_back(p);
+            }
+        }
+    }
+
+    vector<Point> result;
+
+    for (const auto& p : filteredLeft) {
+        result.push_back(p);
+    }
+
+    for (const auto& p : rightMaximal) {
+        result.push_back(p);
+    }
+
+    return result;
+}
     int n = S.size();
 
     if (n <= 3) {
@@ -133,7 +255,25 @@ vector<Point> maximalPoints(const vector<Point>& S) {
 // =====================================================
 
 // n <= 3 時直接暴力求最近距離
+
 double bruteForceClosest(const vector<Point>& S) {
+    if (S.size() < 2) {
+        return numeric_limits<double>::infinity();
+    }
+
+    double minDist = numeric_limits<double>::infinity();
+
+    for (int i = 0; i < S.size(); i++) {
+        for (int j = i + 1; j < S.size(); j++) {
+            double d = distancePoints(S[i], S[j]);
+            if (d < minDist) {
+                minDist = d;
+            }
+        }
+    }
+
+    return minDist;
+}
     // TODO:
     // 1. 若點數小於 2，可回傳很大的值
     // 2. 兩兩比較所有點距離
